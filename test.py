@@ -4,10 +4,8 @@ os.environ["MNE_BROWSER_BACKEND"] = "qt"
 import matplotlib
 matplotlib.use("Qt5Agg")
 
-import re
 from pathlib import Path
 from itertools import combinations
-from tkinter import Tk, filedialog
 
 import mne
 import numpy as np
@@ -19,67 +17,36 @@ from scipy import interpolate
 from scipy.stats import sem, ttest_ind
 
 
-def natural_key(path):
-    return [int(t) if t.isdigit() else t.lower()
-            for t in re.split(r"(\d+)", path.name)]
-
-
-def select_vhdr_files(initial_dir=None):
-    root = Tk()
-    root.withdraw()
-    root.attributes("-topmost", True)
-    try:
-        paths = filedialog.askopenfilenames(
-            parent=root,
-            title="Select BrainVision .vhdr files",
-            initialdir=initial_dir,
-            filetypes=[("BrainVision header", "*.vhdr")],
-        )
-    finally:
-        root.destroy()
-
-    if not paths:
-        raise RuntimeError("No files selected.")
-
-    return sorted((Path(p) for p in paths), key=natural_key)
-
-
-vhdr_paths = select_vhdr_files(initial_dir="data")
-for i, p in enumerate(vhdr_paths, 1):
-    print(f"Run {i}: {p.name}")
-
+DATA_DIR = Path("/space/Lab1/TMS-EEG/TMS-EEG-preprocessing-pipeline/data")
+VHDR_PATH = DATA_DIR / "test_biphasic" / "test.vhdr"
 
 NON_EEG = {"EMG": "emg", "VEOG": "eog", "HEOG": "eog"}
 TMS_MARKERS = ["D0/D  1", "SB/A"]
 
-all_epochs = []
-epoch_counts_per_run = []
+if not VHDR_PATH.exists():
+    raise FileNotFoundError(f"File not found: {VHDR_PATH}")
 
-for vhdr_path in vhdr_paths:
-    print(f"Loading: {vhdr_path}")
-    raw = mne.io.read_raw_brainvision(vhdr_path, preload=True)
+print(f"Loading: {VHDR_PATH}")
+raw = mne.io.read_raw_brainvision(VHDR_PATH, preload=True)
 
-    raw.set_channel_types({ch: t for ch, t in NON_EEG.items() if ch in raw.ch_names})
-    raw.set_montage("colin27_1020")
+raw.set_channel_types({ch: t for ch, t in NON_EEG.items() if ch in raw.ch_names})
+raw.set_montage("colin27_1020")
 
-    raw.pick("eeg")
-    raw.filter(l_freq=1.0, h_freq=None)
+raw.pick("eeg")
+raw.filter(l_freq=1.0, h_freq=None)
 
-    events, event_id = mne.events_from_annotations(raw)
-    marker = next((m for m in TMS_MARKERS if m in event_id), None)
-    if marker is None:
-        raise KeyError(f"No TMS marker found in {vhdr_path.name}. Available: {list(event_id)}")
-    print(f"Using marker: {marker}")
-    chosen_event_id = event_id[marker]
+events, event_id = mne.events_from_annotations(raw)
+marker = next((m for m in TMS_MARKERS if m in event_id), None)
+if marker is None:
+    raise KeyError(f"No TMS marker found in {VHDR_PATH.name}. Available: {list(event_id)}")
+print(f"Using marker: {marker}")
+chosen_event_id = event_id[marker]
 
-    epochs = mne.Epochs(
-        raw, events, event_id=chosen_event_id,
-        tmin=-1.0, tmax=1.0, baseline=None, preload=True,
-    )
+epochs = mne.Epochs(
+    raw, events, event_id=chosen_event_id,
+    tmin=-1.0, tmax=1.0, baseline=None, preload=True,
+)
 
-    epochs.apply_baseline(baseline=(-0.01, -0.002))
+epochs.apply_baseline(baseline=(-0.01, -0.002))
 
-    all_epochs.append(epochs)
-    epoch_counts_per_run.append(len(epochs))
-
-print(f"Epochs per run: {epoch_counts_per_run}")
+print(f"Number of epochs: {len(epochs)}")
