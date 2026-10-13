@@ -1,0 +1,20 @@
+﻿Brain Vision Data Exchange Marker File Version 1.0
+; NeurOne 24-bit data format to GDR format conversion. Copyright Bittium Biosignals Ltd
+
+[Common infos]
+Codepage=UTF-8
+DataFile=test.eeg
+[Marker infos]
+Mk1=New Segment,,1,1,0,00000000000000000000
+Mk2=SB,A,201238,1,0
+Mk3=SB,A,271246,1,0
+Mk4=SB,A,341253,1,0
+Mk5=SB,A,411261,1,0
+Mk6=SB,A,481268,1,0
+Mk7=SB,A,551276,1,0
+Mk8=SB,A,621283,1,0
+Mk9=SB,A,691290,1,0
+Mk10=SB,A,761298,1,0
+Mk11=SB,A,831306,1,0
+Mk12=SB,A,901313,1,0
+Mk13=SB,A,971320,1,0
