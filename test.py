@@ -50,6 +50,7 @@ for i, p in enumerate(vhdr_paths, 1):
 
 
 NON_EEG = {"EMG": "emg", "VEOG": "eog", "HEOG": "eog"}
+TMS_MARKERS = ["D0/D  1", "SB/A"]
 
 all_epochs = []
 epoch_counts_per_run = []
@@ -65,7 +66,11 @@ for vhdr_path in vhdr_paths:
     raw.filter(l_freq=1.0, h_freq=None)
 
     events, event_id = mne.events_from_annotations(raw)
-    chosen_event_id = event_id["D0/D  1"]
+    marker = next((m for m in TMS_MARKERS if m in event_id), None)
+    if marker is None:
+        raise KeyError(f"No TMS marker found in {vhdr_path.name}. Available: {list(event_id)}")
+    print(f"Using marker: {marker}")
+    chosen_event_id = event_id[marker]
 
     epochs = mne.Epochs(
         raw, events, event_id=chosen_event_id,
