@@ -120,8 +120,8 @@ def inspect(n_items, label, draw, fig_num):
 
 
 # %% Read data
-data_dir = Path("/space/Lab1/projects/stimulation_parameters/subject_mris/TMSPAR030/eeg/TMSPAR030_20260729_visit7/raw_brainproducts")
-file = "TMSPAR030_20260729_spTMS_CB65_LM1_Monophasic_AP_120MT.vhdr"
+data_dir = Path("/space/Lab1/TMS-EEG/TMS-EEG-preprocessing-pipeline/data/test_biphasic")
+file = "test.vhdr"
 
 raw = mne.io.read_raw_brainvision(data_dir / file, preload=True)
 
